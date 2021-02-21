@@ -2,16 +2,18 @@ import sys
 import requests
 import os
 import json
+from TweetLoader import *
 
 
 class TweetStreamer:
 
     # ======== CONSTRUCTOR
-    def __init__(self, bearer_token):
+    def __init__(self, bearer_token, database_url):
 
         # ======== INSTANCE VARIABLES
         self.authentication_header = self.create_headers(bearer_token)
-        # self.streamed_tweets_array = []
+
+        self.tweet_loader = TweetLoader(database_url)
 
     # ======== METHODS
 
@@ -74,16 +76,12 @@ class TweetStreamer:
     Makes a POST request and adds rules to stream listener
     """
 
-    def set_rules(self, delete):
+    def set_rules(self, custom_rules, delete):
 
         # sample_rules = [
         #    {"value": "dog has:images", "tag": "dog pictures"},
         #    {"value": "cat has:images -grumpy", "tag": "cat pictures"},
         # ]
-
-        # custom rules
-        custom_rules = [{"value": "(flood OR flooding OR flooded) lang:en place_country:GB -is:retweet",
-                         "tag": "flood-related keywords in GB"}]
 
         # payload manages the addition
         payload = {"add": custom_rules}
@@ -103,13 +101,65 @@ class TweetStreamer:
 
     def get_tweet_stream(self, set):
 
-        # specify endpoint
-        recent_search_endpoint = "https://api.twitter.com/2/tweets/search/recent"
+        # build url to make a GET request for
         filtered_stream_endpoint = "https://api.twitter.com/2/tweets/search/stream"
         tweet_fields = "?tweet.fields=created_at,lang"
         tweet_expansions = "&expansions=geo.place_id&"
         places_fields = "&place.fields=country,country_code,full_name,geo,id,name,place_type"
         url = filtered_stream_endpoint + tweet_fields + tweet_expansions + places_fields
+
+        print("url: ", url)
+
+        # GET request
+        response = requests.get(
+            url, headers=self.authentication_header, stream=True)
+
+        # confirm if request has gone through
+        print(response.status_code)
+
+        # raise exception if not
+        if response.status_code != 200:
+            raise Exception(
+                "Cannot get stream (HTTP {}): {}".format(
+                    response.status_code, response.text
+                )
+            )
+
+        # use tweetloader object to transform and load the data to db
+        for response_line in response.iter_lines():
+            if response_line:
+                # convert json to python dict
+                json_response = json.loads(response_line)
+
+                # load json response to db
+                self.tweet_loader.transform_and_load(json_response)
+
+        """
+        # inspect response object
+        #print("response type: ", type(response))
+        for response_line in response.iter_lines():
+            if response_line:
+                json_response = json.loads(response_line)
+                # inspect response line
+
+                print(json.dumps(json_response, indent=4, sort_keys=True))
+
+                # add to streamed_tweets_array
+
+                # Transform
+
+                # Load
+        """
+
+    def get_tweet_search(self, set):
+
+        # specify endpoint
+        recent_search_endpoint = "https://api.twitter.com/2/tweets/search/recent"
+
+        tweet_fields = "?tweet.fields=created_at,lang"
+        tweet_expansions = "&expansions=geo.place_id&"
+        places_fields = "&place.fields=country,country_code,full_name,geo,id,name,place_type"
+        url = recent_search_endpoint + tweet_fields + tweet_expansions + places_fields
 
         print("url: ", url)
 
@@ -144,48 +194,3 @@ class TweetStreamer:
                 # Load
 
         # return response object
-
-
-def get_tweet_search(self, set):
-
-    # specify endpoint
-    recent_search_endpoint = "https://api.twitter.com/2/tweets/search/recent"
-    filtered_stream_endpoint = "https://api.twitter.com/2/tweets/search/stream"
-    tweet_fields = "?tweet.fields=created_at,lang"
-    tweet_expansions = "&expansions=geo.place_id&"
-    places_fields = "&place.fields=country,country_code,full_name,geo,id,name,place_type"
-    url = filtered_stream_endpoint + tweet_fields + tweet_expansions + places_fields
-
-    print("url: ", url)
-
-    # GET request
-    response = requests.get(
-        url, headers=self.authentication_header, stream=True)
-
-    # confirm if request has gone through
-    print(response.status_code)
-
-    # raise exception if not
-    if response.status_code != 200:
-        raise Exception(
-            "Cannot get stream (HTTP {}): {}".format(
-                response.status_code, response.text
-            )
-        )
-
-    # inspect response object
-    #print("response type: ", type(response))
-    for response_line in response.iter_lines():
-        if response_line:
-            json_response = json.loads(response_line)
-            # inspect response line
-
-            print(json.dumps(json_response, indent=4, sort_keys=True))
-
-            # add to streamed_tweets_array
-
-            # Transform
-
-            # Load
-
-    # return response object

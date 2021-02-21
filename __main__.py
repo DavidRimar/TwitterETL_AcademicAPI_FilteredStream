@@ -2,36 +2,35 @@ import requests
 import os
 import json
 from config import *
-from class_TweetStreamer import *
+from TweetStreamer import *
+
+
+def start_filter_stream():
+
+    # tweetStreamer object
+    tweetStreamer = TweetStreamer(BEARER_TOKEN, DATABASE_URI_TRIAL)
+
+    # GET currently set rules
+    current_rules = tweetStreamer.get_rules()
+
+    # POST delete request
+    # deleted_rules = tweetStreamer.delete_all_rules(current_rules)
+
+    # define rules here
+    custom_rules = [{"value": "(flood OR flooding OR flooded) lang:en place_country:GB -is:retweet",
+                     "tag": "flood-related keywords in GB"}]
+
+    # POST new rules
+    # new_rules = tweetStreamer.set_rules(custom_rules, deleted_rules)
+
+    # GET tweets with the rules passed in
+    tweetStreamer.get_tweet_stream(current_rules)
 
 
 def main():
 
-    # tweetStreamer object
-    tweetStreamer = TweetStreamer(BEARER_TOKEN)
-
-    # headers is the authentication dict
-    #headers = create_headers(BEARER_TOKEN)
-
-    # GET default rules
-    # old_rules = get_rules(headers, BEARER_TOKEN)
-    # for key in old_rules:
-    #    print(key)
-    rules = tweetStreamer.get_rules()
-
-    # POST delete request
-    # delete = delete_all_rules(headers, BEARER_TOKEN, old_rules)
-
-    # POST new rules
-    # set_new_rules = set_rules(headers, delete, BEARER_TOKEN)
-
-    # GET new rules
-    #new_rules = get_rules(headers, BEARER_TOKEN)
-    # for key in new_rules:
-    #    print(key)
-
-    # get_stream(headers, set_new_rules, BEARER_TOKEN)
-    tweetStreamer.get_tweet_stream(rules)
+    # start the filter stream
+    start_filter_stream()
 
 
 if __name__ == "__main__":
