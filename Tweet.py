@@ -4,11 +4,14 @@ from sqlalchemy.types import ARRAY, Float
 
 Base = declarative_base()
 
-# Tweet Class (extends Base class)
+"""
+Tweet Class (extends Base class)
+Representation of the data schema of 'Tweet' table in the PostgreSQL.
+"""
 
 
 class Tweet(Base):
-    __tablename__ = 'academicTweets'
+    __tablename__ = 'filteredStreams'  # 'academicTweets'
     id = Column(Integer, primary_key=True)  # Auto-generated ID
     twitter_id = Column(String)  # (data.id)
     text = Column(String)  # (data.text)
@@ -28,7 +31,7 @@ class Tweet(Base):
 
 
 """
-Example tweet format
+Example of a streamed response object in JSON format
 {
     "data": [
         {

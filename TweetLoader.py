@@ -1,4 +1,3 @@
-# ONCE THE TWEETS ARE EXTRACTED, HERE WE TRANSFORM AND LOAD THE DATA TO THE DB
 from Tweet import *
 from config import *
 from sqlalchemy import create_engine
@@ -8,20 +7,24 @@ from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 import json
 
+"""
+The TweetLoader class takes care of transforming the fields from a response
+to adhere to the data schema represented by the Tweet class.
+It uses sqlAlchemy to load the tweets to a DB.
+"""
+
 
 class TweetLoader():
-
-    # CLASS VARIABLES
 
     # CONSTRUCTOR
     def __init__(self, database_url):
 
         # INSTANCE VARIABLES
 
-        # raw_tweet_list: a list containing the raw Tweet objects
+        # raw_tweet_list: a list containing the raw Tweet objects (Not used)
         self.raw_tweet_list = list()
 
-        # transformed_tweet_list: a list containing the transformed Tweet objects
+        # a list containing Tweet objects (Not used)
         self.transformed_tweet_list = list()
 
         # an engine to communicate with PostgreSQL
@@ -34,40 +37,31 @@ class TweetLoader():
 
     # 1. start_load()
     # 2. transform_and_load()
-    # 3. recreate_database()
-    # 4. session_scope()
+    # 3. create_database()
+    # 4. recreate_database()
+    # 5. session_scope()
 
+    # START LOAD
+    # 1.
     def start_load(self, tweet_to_add):
 
-        #
         print("loading started!")
 
-        # connect to DB
-
-        # session
+        # connect to DB with session
         with self.session_scope() as s:
-            # add the first element of the list
+
+            # add tweet to DB
             s.add(tweet_to_add)
 
-        # add transformedTweetList to DB
-        # s.add(tweet) # iteration required over the Tweets list
+            print("loading successful!")
 
     # TRANSFORM AND LOAD
-
+    # 2.
     def transform_and_load(self, json_response):
 
-        # iterate over the response
-        # for response_line in jsonResponse.iter_lines():
-        #  if response_line:
-        # save response in JSON
-        # json_response = json.loads(response_line)
-
-        # inspect response line
+        # inspect response line (optional)
         print("json printed: ", json.dumps(
             json_response, indent=4, sort_keys=True))
-
-        print("json.dumps type: ", type(json.dumps(json_response)))
-        print("json_response Type: ", type(json_response))
 
         # dismantle the fields
         tweet_id = json_response["data"]["id"]
@@ -97,17 +91,21 @@ class TweetLoader():
         # data passed in to Tweet() has to be in a dictionary format
         single_tweet = Tweet(**tweet_data_dict)
 
-        # add Tweet to tweetList
-        # self.transformed_tweet_list.append(single_tweet)
-
-        print("Transformation complete!")
-        print("single_tweet", single_tweet)
+        # inspect transformed Tweet() object
+        print("single_tweet: ", single_tweet)
 
         # load data
         self.start_load(single_tweet)
 
-    # RECREATE DATABASE
+    # CREATE DATABASE
+    # 4.
+    def create_database(self):
 
+        # creates all tables
+        Base.metadata.create_all(self.engine)
+
+    # RECREATE DATABASE
+    # 4.
     def recreate_database(self):
 
         # drops all tables
@@ -117,7 +115,7 @@ class TweetLoader():
         Base.metadata.create_all(self.engine)
 
     # A CONTEXT MANAGER
-
+    # 5.
     @ contextmanager
     def session_scope(self):
 
@@ -132,34 +130,3 @@ class TweetLoader():
             raise
         finally:
             session.close()
-
-
-"""
-for item_dict in myStreamListener.streamed_data_array:
-    # print("Tweet text starts: \n", item_dict['text'])
-
-    # dismantle the JSON dictionary and format if needed
-    twitter_id = item_dict['id']  # Twitter ID field
-    text = item_dict['text']  # Twitter text field
-    lang = item_dict['lang']  # Twitter lang field
-    created_at = item_dict['created_at']  # DateTime
-
-    # Column(String)  # Twitter geo.place_id field
-    geo_place_id = item_dict['geo']  # most of the time string: "None"
-
-    geo_coord_type = "None"
-    geo_coord_coord_1 = 0
-    geo_coord_coord_2 = 0
-
-    if geo_place_id != None:
-
-        geo_coord_type = item_dict['geo.coordinates.type']
-
-        # Column(Integer)
-        geo_coord_coord_1 = item_dict['geo.coordinates.coordinates'][0]
-
-        # Column(Integer)
-        geo_coord_coord_2 = item_dict['geo.coordinates.coordinates'][1]
-    else:
-        print("It is none!")
-    """

@@ -99,7 +99,7 @@ class TweetStreamer:
             )
         # print(json.dumps(response.json()))
 
-    def get_tweet_stream(self, set):
+    def get_tweet_stream(self, create_db=False):
 
         # build url to make a GET request for
         filtered_stream_endpoint = "https://api.twitter.com/2/tweets/search/stream"
@@ -131,66 +131,8 @@ class TweetStreamer:
                 # convert json to python dict
                 json_response = json.loads(response_line)
 
+                # create database if ran for the first time
+                self.tweet_loader.recreate_database()
+
                 # load json response to db
                 self.tweet_loader.transform_and_load(json_response)
-
-        """
-        # inspect response object
-        #print("response type: ", type(response))
-        for response_line in response.iter_lines():
-            if response_line:
-                json_response = json.loads(response_line)
-                # inspect response line
-
-                print(json.dumps(json_response, indent=4, sort_keys=True))
-
-                # add to streamed_tweets_array
-
-                # Transform
-
-                # Load
-        """
-
-    def get_tweet_search(self, set):
-
-        # specify endpoint
-        recent_search_endpoint = "https://api.twitter.com/2/tweets/search/recent"
-
-        tweet_fields = "?tweet.fields=created_at,lang"
-        tweet_expansions = "&expansions=geo.place_id&"
-        places_fields = "&place.fields=country,country_code,full_name,geo,id,name,place_type"
-        url = recent_search_endpoint + tweet_fields + tweet_expansions + places_fields
-
-        print("url: ", url)
-
-        # GET request
-        response = requests.get(
-            url, headers=self.authentication_header, stream=True)
-
-        # confirm if request has gone through
-        print(response.status_code)
-
-        # raise exception if not
-        if response.status_code != 200:
-            raise Exception(
-                "Cannot get stream (HTTP {}): {}".format(
-                    response.status_code, response.text
-                )
-            )
-
-        # inspect response object
-        #print("response type: ", type(response))
-        for response_line in response.iter_lines():
-            if response_line:
-                json_response = json.loads(response_line)
-                # inspect response line
-
-                print(json.dumps(json_response, indent=4, sort_keys=True))
-
-                # add to streamed_tweets_array
-
-                # Transform
-
-                # Load
-
-        # return response object

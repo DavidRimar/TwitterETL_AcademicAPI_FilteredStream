@@ -13,18 +13,21 @@ def start_filter_stream():
     # GET currently set rules
     current_rules = tweetStreamer.get_rules()
 
-    # POST delete request
-    # deleted_rules = tweetStreamer.delete_all_rules(current_rules)
+    # POST delete request (uncomment to delete all existing rules)
+    deleted_rules = tweetStreamer.delete_all_rules(current_rules)
 
-    # define rules here
+    # define new rules
     custom_rules = [{"value": "(flood OR flooding OR flooded) lang:en place_country:GB -is:retweet",
                      "tag": "flood-related keywords in GB"}]
 
-    # POST new rules
-    # new_rules = tweetStreamer.set_rules(custom_rules, deleted_rules)
+    # POST new rules (uncomment if new rules are created)
+    new_rules = tweetStreamer.set_rules(custom_rules, deleted_rules)
 
-    # GET tweets with the rules passed in
-    tweetStreamer.get_tweet_stream(current_rules)
+    # GET tweets with tweetStreamer
+    # It also handles data loading to DB via its tweetLoader
+    # set create_db = True for the first time the script is ran
+    # set recreate_db = True if we need to recreate schema
+    tweetStreamer.get_tweet_stream()
 
 
 def main():
