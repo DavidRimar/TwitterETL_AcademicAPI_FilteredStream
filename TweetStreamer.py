@@ -99,7 +99,7 @@ class TweetStreamer:
             )
         # print(json.dumps(response.json()))
 
-    def get_tweet_stream(self, create_db=False):
+    def get_tweet_stream(self, recreate_db=False):
 
         # build url to make a GET request for
         filtered_stream_endpoint = "https://api.twitter.com/2/tweets/search/stream"
@@ -131,8 +131,6 @@ class TweetStreamer:
                 # convert json to python dict
                 json_response = json.loads(response_line)
 
-                # create database if ran for the first time
-                self.tweet_loader.recreate_database()
-
                 # load json response to db
-                self.tweet_loader.transform_and_load(json_response)
+                self.tweet_loader.transform_and_load(
+                    json_response, recreate_db)

@@ -20,12 +20,7 @@ class TweetLoader():
     def __init__(self, database_url):
 
         # INSTANCE VARIABLES
-
-        # raw_tweet_list: a list containing the raw Tweet objects (Not used)
-        self.raw_tweet_list = list()
-
-        # a list containing Tweet objects (Not used)
-        self.transformed_tweet_list = list()
+        self.recreatedDB = False
 
         # an engine to communicate with PostgreSQL
         self.engine = create_engine(database_url)
@@ -43,9 +38,15 @@ class TweetLoader():
 
     # START LOAD
     # 1.
-    def start_load(self, tweet_to_add):
+    def start_load(self, tweet_to_add, recreate_db):
 
         print("loading started!")
+
+        # if only interested in the new data, recreate_db deletes data streamed before
+        if recreate_db == True and self.recreatedDB == False:
+            self.recreate_database()
+            print("recreate db ran")
+            self.recreatedDB = True
 
         # connect to DB with session
         with self.session_scope() as s:
@@ -57,7 +58,7 @@ class TweetLoader():
 
     # TRANSFORM AND LOAD
     # 2.
-    def transform_and_load(self, json_response):
+    def transform_and_load(self, json_response, recreate_db):
 
         # inspect response line (optional)
         print("json printed: ", json.dumps(
@@ -95,7 +96,7 @@ class TweetLoader():
         print("single_tweet: ", single_tweet)
 
         # load data
-        self.start_load(single_tweet)
+        self.start_load(single_tweet, recreate_db)
 
     # CREATE DATABASE
     # 4.
